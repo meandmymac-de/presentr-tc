@@ -1,0 +1,30 @@
+{
+  "name": "presentr-tc",
+  "version": "1.0.0",
+  "description": "Template compiler for Presentr",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/meandmymac-de/presentr-tc.git"
+  },
+  "keywords": [
+    "Presenter",
+    "Template",
+    "Compiler"
+  ],
+  "author": "Thomas Bonk <thomas@meandmymac.de>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/meandmymac-de/presentr-tc/issues"
+  },
+  "homepage": "https://github.com/meandmymac-de/presentr-tc#readme",
+  "devDependencies": {
+    "typescript": "^3.6.4"
+  },
+  "dependencies": {
+    "@types/node": "^12.12.5"
+  }
+}
