@@ -23,5 +23,6 @@ struct TemplateDescription: Codable {
     var previewImage: String
     var template: String
     var stylesheet: String
+    var remark: String?
     var fonts: [String]
 }

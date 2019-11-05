@@ -20,12 +20,17 @@
 import Foundation
 import Cocoa
 
+extension String {
+    static let Extension = "presentrt"
+    static let Contents = "Contents"
+}
+
 func compile(filename: String) throws {
     let fileUrl = URL(fileURLWithPath: filename)
-    let description = try loadDescription(from: fileUrl)
+    let templateUrl = fileUrl.deletingPathExtension().appendingPathExtension(.Extension)
+    var description = try loadDescription(from: fileUrl)
     let baseUrl = fileUrl.deletingLastPathComponent()
-    let template = try createTemplate(from: description, with: baseUrl)
-    let templateUrl = fileUrl.deletingPathExtension().appendingPathExtension("presentrt")
+    let template = try createTemplate(from: &description, to: templateUrl)
 
     try save(template, to: templateUrl)
     assignIcon(templateUrl, imageUrl: baseUrl.appendingPathComponent(description.previewImage))
@@ -41,40 +46,53 @@ func assignIcon(_ templateUrl: URL, imageUrl: URL) {
 }
 
 
-func save(_ template: Template, to fileUrl: URL) throws {
-    let encoder = JSONEncoder()
-    encoder.outputFormatting = .prettyPrinted
-    let jsonData = try encoder.encode(template)
-    let jsonString = String(data: jsonData, encoding: .utf8)
-
-    try jsonString?.write(to: fileUrl, atomically: true, encoding: .utf8)
+func save(_ template: FileWrapper, to fileUrl: URL) throws {
+    try template.write(to: fileUrl, options: .atomic, originalContentsURL: nil)
 }
 
 
-func createTemplate(from description: TemplateDescription, with baseUrl: URL) throws -> Template {
+func createTemplate(from description: inout TemplateDescription, to fileUrl: URL) throws -> FileWrapper {
+    let baseUrl = fileUrl.deletingLastPathComponent()
     let previewImage = try convertFile(description.previewImage, with: baseUrl)
     let template = try convertFile(description.template, with: baseUrl)
     let stylesheet = try convertFile(description.stylesheet, with: baseUrl)
-    let remark = TemplateAttribute(
-        filename: "remark.min.js", contents: getEncodedRemarkSource())
+    let contents = FileWrapper(regularFileWithContents: try JSONEncoder().encode(description))
+    let remark = try { () -> FileWrapper in
+        if let remarkFile = description.remark {
+            return try convertFile(remarkFile, with: baseUrl)
+        } else {
+            description.remark = "remark.min.js"
+            return FileWrapper(regularFileWithContents: getRemarkSourceAsData())
+        }
+    }()
+    let fileWrappers = [
+        description.previewImage    : previewImage,
+        description.template        : template,
+        description.stylesheet      : stylesheet,
+        description.remark!         : remark,
+        .Contents                   : contents
+    ]
     let fonts = try description
                     .fonts
-                    .map { filename in try convertFile(filename, with: baseUrl) }
-    
-    return Template(
-                previewImage: previewImage,
-                template: template,
-                stylesheet: stylesheet,
-                remark: remark,
-                fonts: fonts)
+                    .reduce([String : FileWrapper](), { (dictionary, filename) -> [String : FileWrapper] in
+                        var dict = dictionary
+
+                        dict[filename] = try convertFile(filename, with: baseUrl)
+                        return dictionary
+
+                    })
+    let allFileWrappers =
+        fileWrappers.merging(fonts, uniquingKeysWith: { (fw1, fw2) -> FileWrapper in fw1 })
+
+    return FileWrapper(directoryWithFileWrappers: allFileWrappers)
 }
 
 
-func convertFile(_ filename: String, with baseUrl: URL) throws -> TemplateAttribute {
+func convertFile(_ filename: String, with baseUrl: URL) throws -> FileWrapper {
     let fileUrl = baseUrl.appendingPathComponent(filename)
     let data = try Data(contentsOf: fileUrl)
-    
-    return TemplateAttribute(filename: filename, contents: data.base64EncodedString())
+
+    return FileWrapper(regularFileWithContents: data)
 }
 
 
