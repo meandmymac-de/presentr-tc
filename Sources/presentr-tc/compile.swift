@@ -43,6 +43,7 @@ func assignIcon(_ templateUrl: URL, imageUrl: URL) {
 
 func save(_ template: Template, to fileUrl: URL) throws {
     let encoder = JSONEncoder()
+    encoder.outputFormatting = .prettyPrinted
     let jsonData = try encoder.encode(template)
     let jsonString = String(data: jsonData, encoding: .utf8)
 
@@ -54,6 +55,8 @@ func createTemplate(from description: TemplateDescription, with baseUrl: URL) th
     let previewImage = try convertFile(description.previewImage, with: baseUrl)
     let template = try convertFile(description.template, with: baseUrl)
     let stylesheet = try convertFile(description.stylesheet, with: baseUrl)
+    let remark = TemplateAttribute(
+        filename: "remark.min.js", contents: getEncodedRemarkSource())
     let fonts = try description
                     .fonts
                     .map { filename in try convertFile(filename, with: baseUrl) }
@@ -62,6 +65,7 @@ func createTemplate(from description: TemplateDescription, with baseUrl: URL) th
                 previewImage: previewImage,
                 template: template,
                 stylesheet: stylesheet,
+                remark: remark,
                 fonts: fonts)
 }
 

@@ -1,6 +1,6 @@
 {
     "previewImage": "preview.png",
-    "template": "index.html.tpl",
+    "template": "index.html",
     "stylesheet": "styles.css",
     "fonts": []
 }
