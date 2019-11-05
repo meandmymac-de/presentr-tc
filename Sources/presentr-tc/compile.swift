@@ -18,15 +18,26 @@
  */
 
 import Foundation
+import Cocoa
 
 func compile(filename: String) throws {
     let fileUrl = URL(fileURLWithPath: filename)
     let description = try loadDescription(from: fileUrl)
-    let template = createTemplate(
-        from: description, with: fileUrl.deletingLastPathComponent())
+    let baseUrl = fileUrl.deletingLastPathComponent()
+    let template = try createTemplate(from: description, with: baseUrl)
     let templateUrl = fileUrl.deletingPathExtension().appendingPathExtension("presentrt")
 
     try save(template, to: templateUrl)
+    assignIcon(templateUrl, imageUrl: baseUrl.appendingPathComponent(description.previewImage))
+}
+
+func assignIcon(_ templateUrl: URL, imageUrl: URL) {
+    NSWorkspace
+        .shared
+        .setIcon(
+            NSImage(byReferencing: imageUrl),
+            forFile: templateUrl.absoluteString,
+            options: .excludeQuickDrawElementsIconCreationOption)
 }
 
 
@@ -36,17 +47,33 @@ func save(_ template: Template, to fileUrl: URL) throws {
     let jsonString = String(data: jsonData, encoding: .utf8)
 
     try jsonString?.write(to: fileUrl, atomically: true, encoding: .utf8)
+    
+    NSWorkspace.shared.setIcon(NSImage?, forFile: <#T##String#>, options: <#T##NSWorkspace.IconCreationOptions#>)
+    //NSWorkspace.shared().setIcon(#imageLiteral(resourceName: "customFolder"), forFile: appDir!.appendingPathComponent("/Files").path, options: NSWorkspaceIconCreationOptions.excludeQuickDrawElementsIconCreationOption)
 }
 
 
-func createTemplate(from description: TemplateDescription, with baseUrl: URL) -> Template {
-    let template =
-        Template(
-            template: TemplateAttribute(filename: "", contents: ""),
-            stylesheet: TemplateAttribute(filename: "", contents: ""),
-            fonts: [])
+func createTemplate(from description: TemplateDescription, with baseUrl: URL) throws -> Template {
+    let previewImage = try convertFile(description.previewImage, with: baseUrl)
+    let template = try convertFile(description.template, with: baseUrl)
+    let stylesheet = try convertFile(description.stylesheet, with: baseUrl)
+    let fonts = try description
+                    .fonts
+                    .map { filename in try convertFile(filename, with: baseUrl) }
+    
+    return Template(
+                previewImage: previewImage,
+                template: template,
+                stylesheet: stylesheet,
+                fonts: fonts)
+}
 
-    return template
+
+func convertFile(_ filename: String, with baseUrl: URL) throws -> TemplateAttribute {
+    let fileUrl = baseUrl.appendingPathComponent(filename)
+    let data = try Data(contentsOf: fileUrl)
+    
+    return TemplateAttribute(filename: filename, contents: data.base64EncodedString())
 }
 
 

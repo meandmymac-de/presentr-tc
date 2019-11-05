@@ -1,4 +1,5 @@
 {
+    "previewImage": "preview.png",
     "template": "index.html.tpl",
     "stylesheet": "styles.css",
     "fonts": []

@@ -25,6 +25,7 @@ struct TemplateAttribute: Codable {
 }
 
 struct Template: Codable {
+    var previewImage: TemplateAttribute
     var template: TemplateAttribute
     var stylesheet: TemplateAttribute
     var fonts: [TemplateAttribute]

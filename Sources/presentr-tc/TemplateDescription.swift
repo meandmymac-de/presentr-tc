@@ -20,6 +20,7 @@
 import Foundation
 
 struct TemplateDescription: Codable {
+    var previewImage: String
     var template: String
     var stylesheet: String
     var fonts: [String]
