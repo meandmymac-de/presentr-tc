@@ -47,9 +47,6 @@ func save(_ template: Template, to fileUrl: URL) throws {
     let jsonString = String(data: jsonData, encoding: .utf8)
 
     try jsonString?.write(to: fileUrl, atomically: true, encoding: .utf8)
-    
-    NSWorkspace.shared.setIcon(NSImage?, forFile: <#T##String#>, options: <#T##NSWorkspace.IconCreationOptions#>)
-    //NSWorkspace.shared().setIcon(#imageLiteral(resourceName: "customFolder"), forFile: appDir!.appendingPathComponent("/Files").path, options: NSWorkspaceIconCreationOptions.excludeQuickDrawElementsIconCreationOption)
 }
 
 
